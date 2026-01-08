@@ -1,3 +1,5 @@
+import e from "express"
+
 let rooms = {}
 let users = {}
 
@@ -16,7 +18,7 @@ export function initializeSocketHandler(io) {
         console.log("Usuário conectado:", socket.id)
         socket.emit("update-rooms-list", Object.values(rooms))
         users[socket.id] = {
-            nome: "",
+            name: "",
             roomsCreated: [],
         }
 
@@ -24,18 +26,18 @@ export function initializeSocketHandler(io) {
             console.log("Validando nome de usuário:", data.userName)
             const userName = data.userName
             const isFree = !Object.values(users).some((user) => {
-                console.log("Comparando com usuário:", user.name)
                 if (user.name === userName) {
                     console.log("Nome de usuário já está em uso:", userName)
                     return true
                 }
             })
 
+            // console.log(users, isFree)
+
             socket.emit("username-validation", { isFree })
             if (isFree) {
                 users[socket.id].name = userName
             }
-            // console.log(users, isFree)
         })
 
         socket.on("create-room", (data) => {
@@ -43,14 +45,17 @@ export function initializeSocketHandler(io) {
 
             const roomName = data.roomName
             const roomPassword = data.roomPassword
-            const username = data.username
+            const username = data.userName
             const isPrivate = roomPassword && roomPassword.length > 0
+
+            console.log(username, "está criando a sala:", roomName)
 
             users[socket.id].roomsCreated.push(roomName)
             rooms[roomName] = {
                 name: roomName,
                 isPrivate: isPrivate,
                 password: roomPassword,
+                participants: [],
                 participantCount: 0,
                 user: username,
                 history: [],
@@ -65,6 +70,26 @@ export function initializeSocketHandler(io) {
             socket.room = data.roomName
 
             console.log(`${socket.userName} está entrando na sala: ${socket.room}`)
+
+            // rooms[socket.room].participants.push(users[socket.id])
+            // console.log("Participantes da sala:", rooms[socket.room].participants)
+
+            let participants = []
+            const clientsInRoom = io.sockets.adapter.rooms.get(socket.room)
+
+            if (clientsInRoom) {
+                clientsInRoom.forEach((socketId) => {
+                    const socket = io.sockets.sockets.get(socketId)
+                    if (socket && socket.userName) {
+                        if (rooms[socket.room].user === socket.userName) {
+                            participants.push({ id: socketId, name: socket.userName, king: true })
+                        } else {
+                            participants.push({ id: socketId, name: socket.userName, king: false })
+                        }
+                    }
+                })
+            }
+            io.to(socket.room).emit("update-participants", participants)
 
             socket.emit("room-history", {
                 messages: getRoomHistory(socket.room), // Função personalizada
@@ -117,11 +142,20 @@ export function initializeSocketHandler(io) {
                 // })
                 // socket.room = null
 
-                console.log(
-                    "Saindo da sala:",
-                    socket.room,
-                    io.sockets.adapter.rooms.get(socket.room)?.size || 0
-                )
+                let participants = []
+                const clientsInRoom = io.sockets.adapter.rooms.get(socket.room)
+
+                if (clientsInRoom) {
+                    clientsInRoom.forEach((socketId) => {
+                        const socket = io.sockets.sockets.get(socketId)
+                        if (socket && socket.userName) {
+                            participants.push({ id: socketId, name: socket.userName })
+                        }
+                    })
+                }
+                io.to(socket.room).emit("update-participants", participants)
+
+                socket.emit("update-participants", rooms[socket.room].participants)
                 io.emit("update-rooms-list", Object.values(rooms))
             }
         })
@@ -134,6 +168,23 @@ export function initializeSocketHandler(io) {
                     userCount: io.sockets.adapter.rooms.get(socket.room)?.size || 0,
                 })
             }
+
+            let participants = []
+            const clientsInRoom = io.sockets.adapter.rooms.get(socket.room)
+
+            if (clientsInRoom) {
+                clientsInRoom.forEach((socketId) => {
+                    const socket = io.sockets.sockets.get(socketId)
+                    if (socket && socket.userName) {
+                        if (rooms[socket.room].user === socket.userName) {
+                            participants.push({ id: socketId, name: socket.userName, king: true })
+                        } else {
+                            participants.push({ id: socketId, name: socket.userName, king: false })
+                        }
+                    }
+                })
+            }
+            io.to(socket.room).emit("update-participants", participants)
 
             delete users[socket.id]
             console.log("Usuário desconectado:", socket.id)

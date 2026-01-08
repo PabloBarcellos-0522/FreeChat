@@ -142,10 +142,18 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 
     socket.on("update-participants", (participants) => {
+        console.log("Lista de participantes recebida:", participants)
         participantsList.innerHTML = ""
         participants.forEach((p) => {
             const li = document.createElement("li")
-            li.textContent = p.username
+            console.log("Participante:", p)
+
+            if (p.king) {
+                li.textContent = "👑 " + p.name
+            } else {
+                li.textContent = "👥 " + p.name
+            }
+
             if (p.id === socket.id) {
                 li.textContent += " (Você)"
                 li.style.fontWeight = "bold"
