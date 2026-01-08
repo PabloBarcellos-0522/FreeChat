@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     const socket = io("http://localhost:3000")
+    console.log("Cliente socket.io inicializado.", socket.id)
 
     // Lobby elements
     const lobby = document.getElementById("lobby")
@@ -22,6 +23,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentRoom = ""
 
     // ----------------- Event Listeners -----------------
+
+    usernameInput.addEventListener("change", () => {
+        if (validateUsername()) {
+            socket.emit("validade-username", { userName })
+        }
+    })
 
     createRoomBtn.addEventListener("click", () => {
         const roomName = roomNameInput.value.trim()
@@ -85,6 +92,16 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Desconectado do servidor.")
         alert("Você foi desconectado. Por favor, atualize a página.")
         enterLobby()
+    })
+
+    socket.on("username-validation", (data) => {
+        if (data.isFree) {
+            console.log("Nome de usuário disponível:", userName)
+        } else {
+            alert("Nome de usuário já está em uso. Por favor, escolha outro.")
+            userName = ""
+            usernameInput.value = ""
+        }
     })
 
     socket.on("room-history", (data) => {

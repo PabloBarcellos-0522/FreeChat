@@ -1,4 +1,5 @@
 let rooms = {}
+let users = {}
 
 function getRoomHistory(roomName) {
     return rooms[roomName]?.history || []
@@ -14,6 +15,28 @@ export function initializeSocketHandler(io) {
     io.on("connection", (socket) => {
         console.log("Usuário conectado:", socket.id)
         socket.emit("update-rooms-list", Object.values(rooms))
+        users[socket.id] = {
+            nome: "",
+            roomsCreated: [],
+        }
+
+        socket.on("validade-username", (data) => {
+            console.log("Validando nome de usuário:", data.userName)
+            const userName = data.userName
+            const isFree = !Object.values(users).some((user) => {
+                console.log("Comparando com usuário:", user.name)
+                if (user.name === userName) {
+                    console.log("Nome de usuário já está em uso:", userName)
+                    return true
+                }
+            })
+
+            socket.emit("username-validation", { isFree })
+            if (isFree) {
+                users[socket.id].name = userName
+            }
+            // console.log(users, isFree)
+        })
 
         socket.on("create-room", (data) => {
             console.log("Criando sala com dados:", data)
@@ -23,11 +46,13 @@ export function initializeSocketHandler(io) {
             const username = data.username
             const isPrivate = roomPassword && roomPassword.length > 0
 
+            users[socket.id].roomsCreated.push(roomName)
             rooms[roomName] = {
                 name: roomName,
                 isPrivate: isPrivate,
                 password: roomPassword,
                 participantCount: 0,
+                user: username,
                 history: [],
             }
             socket.emit("room-created", data.roomName)
@@ -109,6 +134,8 @@ export function initializeSocketHandler(io) {
                     userCount: io.sockets.adapter.rooms.get(socket.room)?.size || 0,
                 })
             }
+
+            delete users[socket.id]
             console.log("Usuário desconectado:", socket.id)
         })
     })
