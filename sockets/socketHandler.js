@@ -1,30 +1,74 @@
+let rooms = {}
+
+function getRoomHistory(roomName) {
+    return rooms[roomName]?.history || []
+}
+
+function addMessageToRoom(roomName, message) {
+    if (rooms[roomName]) {
+        rooms[roomName].history.push(message)
+    }
+}
+
 export function initializeSocketHandler(io) {
     io.on("connection", (socket) => {
         console.log("Usuário conectado:", socket.id)
+        socket.emit("update-rooms-list", Object.values(rooms))
+
+        socket.on("create-room", (data) => {
+            console.log("Criando sala com dados:", data)
+
+            const roomName = data.roomName
+            const roomPassword = data.roomPassword
+            const username = data.username
+            const isPrivate = roomPassword && roomPassword.length > 0
+
+            rooms[roomName] = {
+                name: roomName,
+                isPrivate: isPrivate,
+                password: roomPassword,
+                participantCount: 0,
+                history: [],
+            }
+            socket.emit("room-created", data.roomName)
+        })
 
         // Entrar em uma sala
-        socket.on("join-room", (roomName, userName) => {
-            socket.join(roomName)
-            socket.userName = userName
-            socket.room = roomName
+        socket.on("join-room", (data) => {
+            socket.join(data.roomName)
+            socket.userName = data.userName
+            socket.room = data.roomName
+
+            console.log(`${socket.userName} está entrando na sala: ${socket.room}`)
+
+            socket.emit("room-history", {
+                messages: getRoomHistory(socket.room), // Função personalizada
+            })
+
+            addMessageToRoom(socket.room, {
+                isSystem: true,
+                message: `${socket.userName} entrou na sala.`,
+                time: new Date().toISOString(),
+            })
 
             // Notificar outros usuários na sala
-            socket.to(roomName).emit("user-joined", {
-                message: `${userName} entrou na sala.`,
-                userCount: io.sockets.adapter.rooms.get(roomName)?.size || 1,
+            io.to(socket.room).emit("user-joined", {
+                message: `${socket.userName} entrou na sala.`,
+                userCount: io.sockets.adapter.rooms.get(socket.room)?.size || 1,
             })
 
-            // Enviar histórico (opcional, com Redis ou memória)
-            socket.emit("room-history", {
-                messages: getRoomHistory(roomName), // Função personalizada
-            })
+            rooms[data.roomName].participantCount =
+                io.sockets.adapter.rooms.get(data.roomName)?.size || 1
+
+            socket.emit("join-success", { roomName: socket.room })
+            io.emit("update-rooms-list", Object.values(rooms))
         })
 
         // Enviar mensagem na sala
-        socket.on("send-message", (message) => {
+        socket.on("send-message", (data) => {
             const payload = {
-                user: socket.userName,
-                text: message,
+                name: data.userName,
+                message: data.message,
                 time: new Date().toISOString(),
             }
 
@@ -39,11 +83,21 @@ export function initializeSocketHandler(io) {
         socket.on("leave-room", () => {
             if (socket.room) {
                 socket.leave(socket.room)
-                io.to(socket.room).emit("user-left", {
-                    message: `${socket.userName} saiu da sala.`,
-                    userCount: io.sockets.adapter.rooms.get(socket.room)?.size || 0,
-                })
-                socket.room = null
+                rooms[socket.room].participantCount =
+                    io.sockets.adapter.rooms.get(socket.room)?.size || 0
+
+                // io.to(socket.room).emit("user-left", {
+                //     message: `${socket.userName} saiu da sala.`,
+                //     userCount: io.sockets.adapter.rooms.get(socket.room)?.size || 0,
+                // })
+                // socket.room = null
+
+                console.log(
+                    "Saindo da sala:",
+                    socket.room,
+                    io.sockets.adapter.rooms.get(socket.room)?.size || 0
+                )
+                io.emit("update-rooms-list", Object.values(rooms))
             }
         })
 

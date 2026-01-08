@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
         socket.emit("create-room", {
             roomName,
             roomPassword,
-            userName: userName,
+            userName,
         })
 
         socket.emit("join-room", { roomName, roomPassword, userName })
@@ -87,6 +87,10 @@ document.addEventListener("DOMContentLoaded", () => {
         enterLobby()
     })
 
+    socket.on("room-history", (data) => {
+        displayHistory(data.messages)
+    })
+
     socket.on("update-rooms-list", (rooms) => {
         roomsList.innerHTML = ""
         if (rooms.length === 0) {
@@ -106,6 +110,10 @@ document.addEventListener("DOMContentLoaded", () => {
             `
             roomsList.appendChild(li)
         })
+    })
+
+    socket.on("user-joined", (data) => {
+        displayMessage({ message: data.message, isSystem: true })
     })
 
     socket.on("join-error", (data) => {
@@ -148,26 +156,32 @@ document.addEventListener("DOMContentLoaded", () => {
                 message,
                 userName,
             })
-            displayMessage({ userName, message }, true) // Optimistically display message
             messageInput.value = ""
         }
     }
 
-    function displayMessage({ userName, message, isSystem = false }, isSentByMe = false) {
+    function displayHistory(messagesArray) {
+        messagesArray.forEach((msg) => {
+            displayMessage(msg)
+        })
+    }
+
+    function displayMessage({ name, message, time, isSystem = false }, isSentByMe = false) {
         const messageElement = document.createElement("div")
         messageElement.classList.add("message")
+        messageElement.innerHTML = `<span class="sender">${name}</span><span class="content">${message}</span>`
 
         if (isSystem) {
             messageElement.classList.add("system-message")
-            messageElement.textContent = message
+            messageElement.innerHTML = `<em>${message}</em>`
         } else {
-            messageElement.innerHTML = `<span class="sender">${userName}</span><span class="content">${message}</span>`
-            if (isSentByMe || userName === userName) {
+            if (userName === name) {
                 messageElement.classList.add("sent")
             } else {
                 messageElement.classList.add("received")
             }
         }
+
         messages.appendChild(messageElement)
         messages.scrollTop = messages.scrollHeight
     }

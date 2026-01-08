@@ -5,8 +5,7 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: #f0f2f5;
     color: #333;
     display: flex;
@@ -188,7 +187,8 @@ h2 {
     text-align: center;
     font-style: italic;
     color: #888;
-    margin: 1rem 0;
+    margin: 5px;
+    padding: 0;
 }
 
 #participants-container {
