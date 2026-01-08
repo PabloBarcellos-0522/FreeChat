@@ -5,7 +5,48 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
         <script src="/socket.io/socket.io.js"></script>
+        <link rel="stylesheet" href="./style.css" />
     </head>
-    <body></body>
-    <script src="./client.js"></script>
+    <body>
+        <div id="app">
+            <div id="lobby" class="container">
+                <h1 class="title">FreeChat</h1>
+                <div class="input-group">
+                    <input type="text" id="username" placeholder="Digite seu nome" />
+                </div>
+
+                <div id="room-selection">
+                    <div id="create-room-form">
+                        <h2>Criar uma sala</h2>
+                        <input type="text" id="room-name" placeholder="Nome da sala" />
+                        <input type="password" id="room-password" placeholder="Senha (opcional)" />
+                        <button id="create-room-btn">Criar e Entrar</button>
+                    </div>
+                    <div id="existing-rooms">
+                        <h2>Salas existentes</h2>
+                        <ul id="rooms-list"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="chat-container" class="container" style="display: none">
+                <div id="chat-header">
+                    <h2 id="chat-room-name"></h2>
+                    <button id="leave-room-btn">Sair da Sala</button>
+                </div>
+                <div id="chat-body">
+                    <div id="messages"></div>
+                    <div id="participants-container">
+                        <h3>Participantes</h3>
+                        <ul id="participants-list"></ul>
+                    </div>
+                </div>
+                <div id="chat-input">
+                    <input type="text" id="message-input" placeholder="Digite uma mensagem..." />
+                    <button id="send-message-btn">Enviar</button>
+                </div>
+            </div>
+        </div>
+        <script src="./client.js"></script>
+    </body>
 </html>
