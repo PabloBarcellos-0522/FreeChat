@@ -163,7 +163,8 @@ h2 {
     margin-bottom: 1rem;
     padding: 0.8rem;
     border-radius: 8px;
-    max-width: 80%;
+    /* max-width: 80%; */
+    width: fit-content;
 }
 
 .message.sent {
@@ -171,10 +172,12 @@ h2 {
     color: white;
     margin-left: auto;
     text-align: right;
+    border-radius: 20px 20px 3px 20px;
 }
 
 .message.received {
     background-color: #e9e9eb;
+    border-radius: 20px 20px 20px 3px;
 }
 
 .message .sender {
@@ -190,6 +193,7 @@ h2 {
     color: #888;
     margin: 5px;
     padding: 0;
+    width: auto;
 }
 
 #participants-container {
