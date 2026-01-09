@@ -79,6 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
     leaveRoomBtn.addEventListener("click", () => {
         console.log("Saindo da sala:", currentRoom)
         socket.emit("leave-room", { roomName: currentRoom, userName })
+        document.getElementById("participant-container").style.display = "none"
         enterLobby()
     })
 
@@ -142,6 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 
     socket.on("join-success", (data) => {
+        document.getElementById("participant-container").style.display = "block"
         enterChatRoom(data.roomName)
     })
 
