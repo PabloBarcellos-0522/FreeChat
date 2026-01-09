@@ -133,6 +133,10 @@ document.addEventListener("DOMContentLoaded", () => {
         displayMessage({ message: data.message, isSystem: true })
     })
 
+    socket.on("user-left", (data) => {
+        displayMessage({ message: data.message, isSystem: true })
+    })
+
     socket.on("join-error", (data) => {
         alert(`Erro ao entrar na sala: ${data.message}`)
     })
