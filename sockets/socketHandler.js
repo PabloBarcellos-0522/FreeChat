@@ -11,23 +11,26 @@ function addMessageToRoom(roomName, message) {
     }
 }
 
-function updateParticipants(io, socket) {
+function updateParticipants(io, roomName) {
+    if (!roomName) return
+
     let participants = []
-    const clientsInRoom = io.sockets.adapter.rooms.get(socket.room)
+    const clientsInRoom = io.sockets.adapter.rooms.get(roomName)
 
     if (clientsInRoom) {
         clientsInRoom.forEach((socketId) => {
-            const socket = io.sockets.sockets.get(socketId)
-            if (socket && socket.userName && rooms[socket.room]) {
-                if (rooms[socket.room].user === socket.userName) {
-                    participants.push({ id: socketId, name: socket.userName, king: true })
-                } else {
-                    participants.push({ id: socketId, name: socket.userName, king: false })
-                }
+            const clientSocket = io.sockets.sockets.get(socketId)
+            if (clientSocket && clientSocket.userName && rooms[roomName]) {
+                const isKing = rooms[roomName].user === clientSocket.userName
+                participants.push({
+                    id: socketId,
+                    name: clientSocket.userName,
+                    king: isKing,
+                })
             }
         })
     }
-    io.to(socket.room).emit("update-participants", participants)
+    io.to(roomName).emit("update-participants", participants)
 }
 
 export function initializeSocketHandler(io) {
@@ -74,7 +77,7 @@ export function initializeSocketHandler(io) {
                 name: roomName,
                 isPrivate: isPrivate,
                 password: roomPassword,
-                participants: [],
+                // participants: [],
                 participantCount: 0,
                 user: username,
                 history: [],
@@ -89,7 +92,7 @@ export function initializeSocketHandler(io) {
             console.log(`${socket.userName} está entrando na sala: ${socket.room}`)
 
             if (rooms[socket.room]) {
-                updateParticipants(io, socket)
+                updateParticipants(io, data.roomName)
 
                 socket.emit("room-history", {
                     messages: getRoomHistory(socket.room), // Função personalizada
@@ -127,23 +130,26 @@ export function initializeSocketHandler(io) {
         })
 
         socket.on("leave-room", () => {
-            if (socket.room) {
-                socket.leave(socket.room)
-                rooms[socket.room].participantCount =
-                    io.sockets.adapter.rooms.get(socket.room)?.size || 0
+            const roomToUpdate = socket.room
 
-                addMessageToRoom(socket.room, {
+            if (roomToUpdate) {
+                socket.leave(roomToUpdate)
+                socket.room = null
+
+                rooms[roomToUpdate].participantCount =
+                    io.sockets.adapter.rooms.get(roomToUpdate)?.size || 0
+
+                addMessageToRoom(roomToUpdate, {
                     isSystem: true,
                     message: `${socket.userName} saiu da sala.`,
                     time: new Date().toISOString(),
                 })
-                io.to(socket.room).emit("user-left", {
+                io.to(roomToUpdate).emit("user-left", {
                     message: `${socket.userName} saiu da sala.`,
-                    userCount: io.sockets.adapter.rooms.get(socket.room)?.size || 0,
+                    userCount: io.sockets.adapter.rooms.get(roomToUpdate)?.size || 0,
                 })
-                socket.room = null
 
-                updateParticipants(io, socket)
+                updateParticipants(io, roomToUpdate)
                 io.emit("update-rooms-list", Object.values(rooms))
             }
         })

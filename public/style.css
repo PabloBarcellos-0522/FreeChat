@@ -161,7 +161,7 @@ h2 {
     flex-grow: 1;
     overflow-y: auto;
     padding-right: 1rem;
-    height: calc(100% - 70px);
+    /* height: calc(100% - 70px); */
 }
 
 .message {

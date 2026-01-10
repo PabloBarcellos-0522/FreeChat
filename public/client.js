@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const leaveRoomBtn = document.getElementById("leave-room-btn")
 
     let userName = ""
+    let setUserName = ""
     let currentRoom = ""
 
     // ----------------- Event Listeners -----------------
@@ -34,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const roomName = roomNameInput.value.trim()
         console.log("Tentando criar sala:", roomName)
         if (!validateUsername() || !roomName) {
-            alert("Por favor, escolha um nome de usuário e um nome de sala.")
+            alert("Por favor, escolha um nome de usuário válido e um nome de sala.")
             return
         }
         const roomPassword = roomPasswordInput.value
@@ -48,7 +49,12 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 
     roomsList.addEventListener("click", (e) => {
-        if (e.target.tagName === "LI" || e.target.closest("li")) {
+        const item = e.target.closest("li")
+
+        if (
+            (e.target.tagName === "LI" || e.target.closest("li")) &&
+            !item.classList.contains("void")
+        ) {
             const li = e.target.closest("li")
             const roomName = li.dataset.roomName
             const isPrivate = li.dataset.private === "true"
@@ -86,18 +92,22 @@ document.addEventListener("DOMContentLoaded", () => {
     // ----------------- Socket Event Handlers -----------------
 
     socket.on("connect", () => {
-        console.log("Conectado ao servidor com ID:", socket.id)
+        console.log("Conectado ao servidor")
     })
 
     socket.on("disconnect", () => {
-        console.log("Desconectado do servidor.")
-        alert("Você foi desconectado. Por favor, atualize a página.")
         enterLobby()
+        console.log("Desconectado do servidor.")
+        setTimeout(() => {
+            alert("Você foi desconectado. Por favor, atualize a página.")
+            location.reload()
+        }, 100)
     })
 
     socket.on("username-validation", (data) => {
         if (data.isFree) {
             console.log("Nome de usuário disponível:", userName)
+            setUserName = userName
         } else {
             alert("Nome de usuário já está em uso. Por favor, escolha outro.")
             userName = ""
@@ -112,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("update-rooms-list", (rooms) => {
         roomsList.innerHTML = ""
         if (rooms.length === 0) {
-            roomsList.innerHTML = "<li>Nenhuma sala disponível. Crie uma!</li>"
+            roomsList.innerHTML = "<li class='void'>Nenhuma sala disponível. Crie uma!</li>"
             return
         }
         rooms.forEach((room) => {
@@ -148,11 +158,9 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 
     socket.on("update-participants", (participants) => {
-        console.log("Lista de participantes recebida:", participants)
         participantsList.innerHTML = ""
         participants.forEach((p) => {
             const li = document.createElement("li")
-            console.log("Participante:", p)
 
             if (p.king) {
                 li.textContent = "👑 " + p.name
@@ -176,6 +184,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function validateUsername() {
         userName = usernameInput.value.trim()
+        if (userName.length < 3 || userName.length > 15) {
+            alert("O nome de usuário deve ter entre 3 e 15 caracteres.")
+            userName = setUserName
+            usernameInput.value = setUserName
+            return false
+        } else if (!/^[a-zA-Z0-9_]+$/.test(userName)) {
+            alert("O nome de usuário só pode conter letras, números e underscores.")
+            userName = setUserName
+            usernameInput.value = setUserName
+            return false
+        }
+
         return userName !== ""
     }
 
@@ -195,6 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
         messagesArray.forEach((msg) => {
             displayMessage(msg)
         })
+        messages.scrollTop = messages.scrollHeight
     }
 
     function displayMessage({ name, message, time, isSystem = false }, isSentByMe = false) {
@@ -224,6 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chatRoomName.textContent = ""
         messages.innerHTML = ""
         participantsList.innerHTML = ""
+        document.getElementById("participant-container").style.display = "none"
     }
 
     function enterChatRoom(roomName) {
@@ -231,6 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chatRoomName.textContent = roomName
         lobby.style.display = "none"
         chatContainer.style.display = "flex"
+        messages.scrollTop = messages.scrollHeight
         messageInput.focus()
     }
 })
