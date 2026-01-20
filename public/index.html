@@ -38,7 +38,9 @@
                     <div id="messages"></div>
                 </div>
                 <div id="chat-input">
+                    <input type="file" id="media-input" accept="image/*" style="display: none;" />
                     <input type="text" id="message-input" placeholder="Digite uma mensagem..." />
+                    <button id="send-media-btn">+</button>
                     <button id="send-message-btn">Enviar</button>
                 </div>
             </div>
@@ -50,5 +52,10 @@
             </div>
         </div>
         <script src="./client.js"></script>
+
+        <div id="image-modal" class="modal-overlay" style="display: none;">
+            <span class="modal-close">&times;</span>
+            <img class="modal-content" id="modal-image">
+        </div>
     </body>
 </html>

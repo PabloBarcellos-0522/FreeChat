@@ -16,8 +16,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const participantsList = document.getElementById("participants-list")
     const messages = document.getElementById("messages")
     const messageInput = document.getElementById("message-input")
+    const sendMediaBtn = document.getElementById("send-media-btn")
     const sendMessageBtn = document.getElementById("send-message-btn")
     const leaveRoomBtn = document.getElementById("leave-room-btn")
+    const mediaInput = document.getElementById("media-input")
+
+    // Image Modal Elements
+    const imageModal = document.getElementById("image-modal")
+    const modalImage = document.getElementById("modal-image")
+    const closeModalBtn = document.querySelector(".modal-close")
 
     let userName = ""
     let setUserName = ""
@@ -75,6 +82,28 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     })
 
+    sendMediaBtn.addEventListener("click", () => {
+        mediaInput.click()
+    })
+
+    mediaInput.addEventListener("change", () => {
+        const file = mediaInput.files[0]
+        if (!file) return
+
+        const reader = new FileReader()
+        reader.onload = () => {
+            const base64String = reader.result
+            socket.emit("send-message", {
+                roomName: currentRoom,
+                message: base64String,
+                type: "image",
+                userName,
+            })
+        }
+        reader.readAsDataURL(file)
+        mediaInput.value = "" // Reset for next selection
+    })
+
     sendMessageBtn.addEventListener("click", sendMessage)
     messageInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
@@ -88,6 +117,55 @@ document.addEventListener("DOMContentLoaded", () => {
         socket.emit("leave-room", { roomName: currentRoom, userName })
         document.getElementById("participant-container").style.display = "none"
         enterLobby()
+    })
+
+    // ----------------- Image Modal Logic -----------------
+    let currentZoom = 1
+    const zoomStep = 0.1
+    const maxZoom = 3
+    const minZoom = 0.5
+
+    messages.addEventListener("click", (e) => {
+        if (e.target.tagName === "IMG" && e.target.classList.contains("chat-image")) {
+            imageModal.style.display = "flex"
+            modalImage.src = e.target.src
+        }
+    })
+
+    function closeModal() {
+        imageModal.style.display = "none"
+        modalImage.src = "" // Clear the image source
+        resetZoom()
+    }
+
+    function resetZoom() {
+        currentZoom = 1
+        modalImage.style.transform = `scale(${currentZoom})`
+    }
+
+    closeModalBtn.addEventListener("click", closeModal)
+
+    imageModal.addEventListener("wheel", (e) => {
+        e.preventDefault()
+        const delta = e.deltaY > 0 ? -zoomStep : zoomStep
+        const newZoom = currentZoom + delta
+
+        if (newZoom >= minZoom && newZoom <= maxZoom) {
+            currentZoom = newZoom
+            modalImage.style.transform = `scale(${currentZoom})`
+        }
+    })
+
+    // Close modal if clicking outside the image (on the overlay)
+    imageModal.addEventListener("click", (e) => {
+        if (e.target === imageModal) {
+            closeModal()
+        }
+    })
+
+    modalImage.addEventListener("click", (e) => {
+        e.stopPropagation()
+        resetZoom()
     })
 
     // ----------------- Socket Event Handlers -----------------
@@ -203,9 +281,13 @@ document.addEventListener("DOMContentLoaded", () => {
     function sendMessage() {
         const message = messageInput.value.trim()
         if (message) {
+            const urlRegex = /(https?:\/\/[^\s]+)/g
+            const isLink = urlRegex.test(message)
+
             socket.emit("send-message", {
                 roomName: currentRoom,
                 message,
+                type: isLink ? "link" : "text",
                 userName,
             })
             messageInput.value = ""
@@ -219,10 +301,31 @@ document.addEventListener("DOMContentLoaded", () => {
         messages.scrollTop = messages.scrollHeight
     }
 
-    function displayMessage({ name, message, time, isSystem = false }, isSentByMe = false) {
+    function createMessageContent(data) {
+        const { message, type = "text" } = data
+        const imageRegex = /\.(jpeg|jpg|gif|png|webp)$/i
+
+        if (type === "image") {
+            return `<img src="${message}" alt="Imagem enviada" class="chat-image">`
+        }
+
+        const urlRegex = /(https?:\/\/[^\s]+)/g
+        return message.replace(urlRegex, (url) => {
+            if (imageRegex.test(url)) {
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer"><img src="${url}" alt="Imagem de um link" class="chat-image"></a>`
+            } else {
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
+            }
+        })
+    }
+
+    function displayMessage(data) {
+        const { name, message, isSystem = false } = data
         const messageElement = document.createElement("div")
         messageElement.classList.add("message")
-        messageElement.innerHTML = `<span class="sender">${name}</span><span class="content">${message}</span>`
+
+        const contentHTML = createMessageContent(data)
+        messageElement.innerHTML = `<span class="sender">${name}</span><span class="content">${contentHTML}</span>`
 
         if (isSystem) {
             messageElement.classList.add("system-message")

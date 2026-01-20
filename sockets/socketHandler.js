@@ -133,6 +133,7 @@ export function initializeSocketHandler(io) {
                 name: data.userName,
                 message: data.message,
                 time: new Date().toISOString(),
+                type: data.type || "text", // Can be 'text', 'image', or 'link'
             }
             addMessageToRoom(socket.room, payload)
 
