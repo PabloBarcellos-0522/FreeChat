@@ -55,7 +55,7 @@ export function initializeSocketHandler(io) {
             }
 
             const isFree = !Object.values(users).some(
-                (user) => user.name.toLowerCase() === userName
+                (user) => user.name.toLowerCase() === userName,
             )
 
             socket.emit("username-validation", { isFree })
@@ -77,7 +77,6 @@ export function initializeSocketHandler(io) {
                 name: roomName,
                 isPrivate: isPrivate,
                 password: roomPassword,
-                // participants: [],
                 participantCount: 0,
                 user: username,
                 history: [],
@@ -89,10 +88,21 @@ export function initializeSocketHandler(io) {
             socket.join(data.roomName)
             socket.userName = data.userName
             socket.room = data.roomName
-            console.log(`${socket.userName} está entrando na sala: ${socket.room}`)
 
             if (rooms[socket.room]) {
+                if (rooms[socket.room].password != data.roomPassword) {
+                    // Senha correta
+                    socket.emit("join-error", { message: "Senha incorreta." })
+                    console.log(
+                        "Senha incorreta:",
+                        socket.room,
+                        data.roomPassword,
+                        rooms[socket.room].password,
+                    )
+                    return
+                }
                 updateParticipants(io, data.roomName)
+                console.log(`${socket.userName} está entrando na sala: ${socket.room}`)
 
                 socket.emit("room-history", {
                     messages: getRoomHistory(socket.room), // Função personalizada

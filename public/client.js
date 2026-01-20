@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return
         }
         const roomPassword = roomPasswordInput.value
+        console.log("Criando sala:", roomName, roomPassword)
         socket.emit("create-room", {
             roomName,
             roomPassword,
@@ -70,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (password === null) return // User cancelled
             }
 
-            socket.emit("join-room", { roomName, password, userName })
+            socket.emit("join-room", { roomName, roomPassword: password, userName })
         }
     })
 
