@@ -72,6 +72,12 @@ export function initializeSocketHandler(io) {
 
             console.log(username, "está criando a sala:", roomName)
 
+            if (rooms[roomName]) {
+                socket.emit("room-creation-error", {
+                    message: "Nome de sala já existe. Escolha outro.",
+                })
+                return
+            }
             users[socket.id].roomsCreated.push(roomName)
             rooms[roomName] = {
                 name: roomName,
@@ -88,6 +94,8 @@ export function initializeSocketHandler(io) {
             socket.join(data.roomName)
             socket.userName = data.userName
             socket.room = data.roomName
+
+            console.log(`${socket.userName} está tentando entrar na sala: ${socket.room}`)
 
             if (rooms[socket.room]) {
                 if (rooms[socket.room].password != data.roomPassword) {
@@ -141,7 +149,7 @@ export function initializeSocketHandler(io) {
         })
 
         socket.on("typing:start", ({ roomName, userName }) => {
-            socket.to(roomName).emit("user:typing:start", { userName })
+            socket.broadcast.to(roomName).emit("user:typing:start", { userName })
         })
 
         socket.on("typing:stop", ({ roomName, userName }) => {
@@ -186,9 +194,24 @@ export function initializeSocketHandler(io) {
                     message: `${socket.userName} foi desconectado.`,
                     userCount: io.sockets.adapter.rooms.get(roomToUpdate)?.size || 0,
                 })
+
+                addMessageToRoom(roomToUpdate, {
+                    isSystem: true,
+                    message: `${socket.userName} saiu da sala.`,
+                    time: new Date().toISOString(),
+                })
+                io.to(roomToUpdate).emit("user-left", {
+                    message: `${socket.userName} saiu da sala.`,
+                    userCount: io.sockets.adapter.rooms.get(roomToUpdate)?.size || 0,
+                })
+
+                rooms[roomToUpdate].participantCount =
+                    io.sockets.adapter.rooms.get(roomToUpdate)?.size || 0
+
+                io.emit("update-rooms-list", Object.values(rooms))
             }
 
-            updateParticipants(io, socket)
+            updateParticipants(io, roomToUpdate)
             delete users[socket.id]
             console.log("Usuário desconectado:", socket.id)
         })

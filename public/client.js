@@ -46,20 +46,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     createRoomBtn.addEventListener("click", () => {
         const roomName = roomNameInput.value.trim()
-        console.log("Tentando criar sala:", roomName)
         if (!validateUsername() || !roomName) {
             alert("Por favor, escolha um nome de usuário válido e um nome de sala.")
             return
         }
         const roomPassword = roomPasswordInput.value
-        console.log("Criando sala:", roomName, roomPassword)
+        console.log("Tentando criar sala:", roomName, roomPassword)
         socket.emit("create-room", {
             roomName,
             roomPassword,
             userName,
         })
-
-        socket.emit("join-room", { roomName, roomPassword, userName })
     })
 
     roomsList.addEventListener("click", (e) => {
@@ -211,6 +208,19 @@ document.addEventListener("DOMContentLoaded", () => {
             userName = ""
             usernameInput.value = ""
         }
+    })
+
+    socket.on("room-created", (roomName) => {
+        console.log("Sala criada com sucesso:", roomName)
+        const roomPassword = roomPasswordInput.value
+        roomNameInput.value = ""
+        roomPasswordInput.value = ""
+
+        socket.emit("join-room", { roomName, roomPassword, userName })
+    })
+
+    socket.on("room-creation-error", (data) => {
+        alert(`Erro ao criar sala: ${data.message}`)
     })
 
     socket.on("room-history", (data) => {
