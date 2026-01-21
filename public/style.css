@@ -264,10 +264,23 @@ h2 {
 }
 
 @media (max-width: 768px) {
+    body {
+        background-color: #f0f2f5;
+        color: #333;
+        display: block;
+        height: 100vh;
+    }
+
+    #lobby {
+        max-width: 100%;
+        margin: inherit;
+        height: inherit;
+    }
+
     #app {
-        width: 90%;
+        width: 100%;
         max-width: 1500px;
-        height: 90vh;
+        height: 100vh;
         display: flex;
         gap: 10px;
         flex-direction: column;
