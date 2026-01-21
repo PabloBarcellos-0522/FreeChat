@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendMessageBtn = document.getElementById("send-message-btn")
     const leaveRoomBtn = document.getElementById("leave-room-btn")
     const mediaInput = document.getElementById("media-input")
+    const typingIndicator = document.getElementById("typing-indicator")
 
     // Image Modal Elements
     const imageModal = document.getElementById("image-modal")
@@ -29,6 +30,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let userName = ""
     let setUserName = ""
     let currentRoom = ""
+
+    // Typing indicator logic
+    let typingTimer
+    let isTyping = false
+    const typingUsers = {}
 
     // ----------------- Event Listeners -----------------
 
@@ -110,6 +116,19 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault()
             sendMessage()
         }
+    })
+
+    messageInput.addEventListener("input", () => {
+        clearTimeout(typingTimer)
+        if (!isTyping) {
+            console.log(`${userName} está digitando...`)
+            socket.emit("typing:start", { roomName: currentRoom, userName })
+            isTyping = true
+        }
+        typingTimer = setTimeout(() => {
+            socket.emit("typing:stop", { roomName: currentRoom, userName })
+            isTyping = false
+        }, 1000) // 1 second timeout
     })
 
     leaveRoomBtn.addEventListener("click", () => {
@@ -256,10 +275,51 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 
     socket.on("new-message", (data) => {
+        // Stop showing typing indicator for this user when a message arrives
+        if (typingUsers[data.name]) {
+            delete typingUsers[data.name]
+            updateTypingIndicator()
+        }
         displayMessage(data)
     })
 
+    socket.on("user:typing:start", ({ userName }) => {
+        console.log(`${userName} está digitando...`)
+        typingUsers[userName] = true
+        updateTypingIndicator()
+    })
+
+    socket.on("user:typing:stop", ({ userName }) => {
+        console.log(`${userName} parou de digitar...`)
+        delete typingUsers[userName]
+        updateTypingIndicator()
+    })
+
     // ----------------- Helper Functions -----------------
+
+    function updateTypingIndicator() {
+        const names = Object.keys(typingUsers)
+        if (names.length === 0) {
+            typingIndicator.innerHTML = ""
+            return
+        }
+
+        let text = ""
+        if (names.length === 1) {
+            text = `<strong>${names[0]}</strong> está digitando`
+        } else if (names.length === 2) {
+            text = `<strong>${names[0]}</strong> e <strong>${names[1]}</strong> estão digitando`
+        } else {
+            text = "Vários usuários estão digitando"
+        }
+
+        typingIndicator.innerHTML = `
+            <span>${text}</span>
+            <span class="dots">
+                <span>.</span><span>.</span><span>.</span>
+            </span>
+        `
+    }
 
     function validateUsername() {
         userName = usernameInput.value.trim()
@@ -290,6 +350,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 type: isLink ? "link" : "text",
                 userName,
             })
+            // Stop typing indicator immediately on send
+            clearTimeout(typingTimer)
+            socket.emit("typing:stop", { roomName: currentRoom, userName })
+            isTyping = false
             messageInput.value = ""
         }
     }

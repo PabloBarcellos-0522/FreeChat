@@ -140,10 +140,21 @@ export function initializeSocketHandler(io) {
             io.to(socket.room).emit("new-message", payload)
         })
 
+        socket.on("typing:start", ({ roomName, userName }) => {
+            socket.to(roomName).emit("user:typing:start", { userName })
+        })
+
+        socket.on("typing:stop", ({ roomName, userName }) => {
+            socket.broadcast.to(roomName).emit("user:typing:stop", { userName })
+        })
+
         socket.on("leave-room", () => {
             const roomToUpdate = socket.room
 
             if (roomToUpdate) {
+                socket.broadcast
+                    .to(roomToUpdate)
+                    .emit("user:typing:stop", { userName: socket.userName })
                 socket.leave(roomToUpdate)
                 socket.room = null
 
@@ -166,10 +177,14 @@ export function initializeSocketHandler(io) {
         })
 
         socket.on("disconnect", () => {
-            if (socket.room) {
-                io.to(socket.room).emit("user-disconnected", {
+            const roomToUpdate = socket.room
+            if (roomToUpdate) {
+                socket.broadcast
+                    .to(roomToUpdate)
+                    .emit("user:typing:stop", { userName: socket.userName })
+                io.to(roomToUpdate).emit("user-disconnected", {
                     message: `${socket.userName} foi desconectado.`,
-                    userCount: io.sockets.adapter.rooms.get(socket.room)?.size || 0,
+                    userCount: io.sockets.adapter.rooms.get(roomToUpdate)?.size || 0,
                 })
             }
 
