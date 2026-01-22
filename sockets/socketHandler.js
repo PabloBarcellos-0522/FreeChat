@@ -184,6 +184,27 @@ export function initializeSocketHandler(io) {
             }
         })
 
+        socket.on("mousemove", (data) => {
+            socket.broadcast.to(socket.room).emit("user-mousemove", {
+                userName: socket.userName,
+                // userName: "Pablo",
+                x: data.x,
+                y: data.y,
+            })
+            // socket.broadcast.emit("user-mousemove", {
+            //     // userName: socket.userName,
+            //     userName: "Pablo",
+            //     x: data.x,
+            //     y: data.y,
+            // })
+        })
+
+        socket.on("mouseleave", () => {
+            socket.broadcast.to(socket.room).emit("user-mouseleave", {
+                userName: socket.userName,
+            })
+        })
+
         socket.on("disconnect", () => {
             const roomToUpdate = socket.room
             if (roomToUpdate) {

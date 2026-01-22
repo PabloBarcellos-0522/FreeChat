@@ -46,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let userName = ""
     let setUserName = ""
     let currentRoom = ""
+    let usersMouse = {}
 
     // Typing indicator logic
     let typingTimer
@@ -53,6 +54,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const typingUsers = {}
 
     // ----------------- Event Listeners -----------------
+
+    document.addEventListener("mousemove", (event) => {
+        const x = event.clientX / window.innerWidth // Posição horizontal na janela
+        const y = event.clientY / window.innerHeight // Posição vertical na janela
+
+        socket.emit("mousemove", { x, y })
+    })
+
+    document.addEventListener("mouseleave", () => {
+        socket.emit("mouseleave", {})
+    })
 
     usernameInput.addEventListener("change", () => {
         if (validateUsername()) {
@@ -223,6 +235,43 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Nome de usuário já está em uso. Por favor, escolha outro.")
             userName = ""
             usernameInput.value = ""
+        }
+    })
+
+    socket.on("user-mousemove", (data) => {
+        let userData = usersMouse[data.userName]
+
+        if (!userData) {
+            const html = `
+                <div class="userMouse" id="mouse-${data.userName}">
+                    <img src="resources/house_mouse.webp" alt="${data.userName}" style="width: 50px;" />
+                    <h1 style="font-size: 14px;">${data.userName}</h1>
+                </div>
+            `
+
+            document.getElementById("app").insertAdjacentHTML("beforeend", html)
+            usersMouse[data.userName] = {
+                element: document.getElementById(`mouse-${data.userName}`),
+                x: data.x,
+                y: data.y,
+            }
+            userData = usersMouse[data.userName]
+        }
+
+        userData.x = data.x
+        userData.y = data.y
+
+        const posX = data.x * window.innerWidth
+        const posY = data.y * window.innerHeight
+        console.log("Posições do mouse:", posX, posY)
+        userData.element.style.transform = `translate3d(${posX}px, ${posY}px, 0)`
+    })
+
+    socket.on("user-mouseleave", (data) => {
+        const userData = usersMouse[data.userName]
+        if (userData) {
+            userData.element.remove()
+            delete usersMouse[data.userName]
         }
     })
 

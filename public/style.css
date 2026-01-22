@@ -415,3 +415,12 @@ h2 {
         transform: scale(1);
     }
 }
+
+.userMouse {
+    position: absolute;
+    z-index: 9999;
+    width: 50px;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
