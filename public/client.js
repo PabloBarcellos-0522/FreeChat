@@ -1,4 +1,20 @@
 document.addEventListener("DOMContentLoaded", () => {
+    const messages = document.getElementById("messages")
+    const participantsContainer = document.getElementById("participants-container")
+
+    const messagesLenis = new Lenis({ wrapper: messages, content: messages })
+    const participantsLenis = new Lenis({
+        wrapper: participantsContainer,
+        content: participantsContainer,
+    })
+
+    function raf(time) {
+        messagesLenis.raf(time)
+        participantsLenis.raf(time)
+        requestAnimationFrame(raf)
+    }
+
+    requestAnimationFrame(raf)
     const socket = io("http://localhost:3000")
     console.log("Cliente socket.io inicializado.", socket.id)
 
@@ -14,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatContainer = document.getElementById("chat-container")
     const chatRoomName = document.getElementById("chat-room-name")
     const participantsList = document.getElementById("participants-list")
-    const messages = document.getElementById("messages")
+    // const messages = document.getElementById("messages") // Moved above
     const messageInput = document.getElementById("message-input")
     const sendMediaBtn = document.getElementById("send-media-btn")
     const sendMessageBtn = document.getElementById("send-message-btn")

@@ -28,7 +28,7 @@ body::-webkit-scrollbar {
 }
 
 #participant-container {
-    max-width: 300px;
+    max-width: 315px;
     overflow-y: auto;
 }
 
@@ -38,14 +38,6 @@ body::-webkit-scrollbar {
     height: 95vh;
     display: flex;
     gap: 10px;
-
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    overflow-y: scroll;
-}
-
-#app::-webkit-scrollbar {
-    display: none;
 }
 
 #lobby {
@@ -174,11 +166,9 @@ h2 {
 
 #messages {
     flex-grow: 1;
-    overflow-y: auto;
+    overflow-y: hidden;
     padding-right: 1rem;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    overflow-y: scroll;
+    padding-left: 1rem;
 }
 
 .message {
@@ -234,10 +224,12 @@ h2 {
 }
 
 #participants-container {
-    width: 200px;
+    width: auto;
     border-left: 1px solid #eee;
     padding-left: 1rem;
     overflow-y: auto;
+    max-height: -webkit-fill-available;
+    max-height: stretch;
 }
 
 #participants-container h3 {
@@ -312,6 +304,20 @@ h2 {
 
     #participant-container {
         max-width: initial;
+        max-height: 55vh;
+    }
+
+    #participants-container {
+        width: auto;
+        max-height: 35vh;
+        overflow-y: auto;
+    }
+
+    #messages {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 1rem;
+        padding-left: 1rem;
     }
 }
 
