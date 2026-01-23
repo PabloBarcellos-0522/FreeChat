@@ -271,6 +271,37 @@ h2 {
     margin-bottom: 0;
 }
 
+.userMouse {
+    position: fixed; /* Changed from absolute to fixed */
+    top: 0;
+    left: 0;
+    pointer-events: none; /* Allows clicks to pass through the mouse pointer */
+    z-index: 9999; /* Ensures it's always on top */
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    line-height: 1;
+    text-shadow:
+        -1px -1px 2px rgba(0, 0, 0, 0.7),
+        1px -1px 2px rgba(0, 0, 0, 0.7),
+        -1px 1px 2px rgba(0, 0, 0, 0.7),
+        1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.userMouse svg {
+    width: 20px; /* Adjust size as needed */
+    height: 20px;
+    fill: currentColor; /* Will inherit color from parent .userMouse */
+}
+
+.userMouse h1 {
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+    color: currentColor; /* Inherit color */
+}
+
 @media (max-width: 768px) {
     body {
         background-color: #f0f2f5;
@@ -318,6 +349,10 @@ h2 {
         overflow-y: auto;
         padding-right: 1rem;
         padding-left: 1rem;
+    }
+
+    .userMouse {
+        display: none;
     }
 }
 
@@ -414,13 +449,4 @@ h2 {
     40% {
         transform: scale(1);
     }
-}
-
-.userMouse {
-    position: absolute;
-    z-index: 9999;
-    width: 50px;
-    top: 0;
-    left: 0;
-    pointer-events: none;
 }

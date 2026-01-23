@@ -48,6 +48,31 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentRoom = ""
     let usersMouse = {}
 
+    // Colors for user mouse pointers
+    const mouseColors = [
+        "#ffffff",
+        "#FF0000",
+        "#00FF00",
+        "#0000FF",
+        "#FFFF00",
+        "#FF00FF",
+        "#00FFFF",
+        "#FFA500",
+        "#800080",
+        "#008000",
+        "#FFC0CB",
+        "#8B4513",
+        "#4682B4",
+        "#000000",
+    ]
+    let mouseColorIndex = 0
+
+    function getNextMouseColor() {
+        const color = mouseColors[mouseColorIndex % mouseColors.length]
+        mouseColorIndex++
+        return color
+    }
+
     // Typing indicator logic
     let typingTimer
     let isTyping = false
@@ -241,10 +266,16 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("user-mousemove", (data) => {
         let userData = usersMouse[data.userName]
 
-        if (!userData) {
+        if (!userData || document.getElementById(`mouse-${data.userName}`) === null) {
+            let assignedColor = ""
+            if (!userData) {
+                assignedColor = getNextMouseColor()
+            } else {
+                assignedColor = userData.color
+            }
             const html = `
-                <div class="userMouse" id="mouse-${data.userName}">
-                    <img src="resources/house_mouse.webp" alt="${data.userName}" style="width: 50px;" />
+                <div class="userMouse" id="mouse-${data.userName}" style="color: ${assignedColor};">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="currentColor" stroke="#000000" stroke-width="2" d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.35Z"></path></svg>
                     <h1 style="font-size: 14px;">${data.userName}</h1>
                 </div>
             `
@@ -254,6 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 element: document.getElementById(`mouse-${data.userName}`),
                 x: data.x,
                 y: data.y,
+                color: assignedColor,
             }
             userData = usersMouse[data.userName]
         }
@@ -263,7 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const posX = data.x * window.innerWidth
         const posY = data.y * window.innerHeight
-        console.log("Posições do mouse:", posX, posY)
+        // console.log("Posições do mouse:", posX, posY); // Moved to comment as it can be noisy
         userData.element.style.transform = `translate3d(${posX}px, ${posY}px, 0)`
     })
 
@@ -271,7 +303,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const userData = usersMouse[data.userName]
         if (userData) {
             userData.element.remove()
-            delete usersMouse[data.userName]
+            // delete usersMouse[data.userName]
         }
     })
 
