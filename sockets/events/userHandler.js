@@ -1,11 +1,5 @@
-const { users, rooms } = require("../state").default
+const { users, rooms, addMessageToRoom } = require("../state")
 const { updateParticipants } = require("../utils")
-
-function addMessageToRoom(roomName, message) {
-    if (rooms[roomName]) {
-        rooms[roomName].history.push(message)
-    }
-}
 
 module.exports = (io, socket) => {
     const validateUsername = (data) => {

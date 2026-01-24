@@ -1,10 +1,4 @@
-const { rooms } = require("../state").default
-
-function addMessageToRoom(roomName, message) {
-    if (rooms[roomName]) {
-        rooms[roomName].history.push(message)
-    }
-}
+const { rooms, addMessageToRoom } = require("../state")
 
 module.exports = (io, socket) => {
     const sendMessage = (data) => {

@@ -1,14 +1,8 @@
-const { rooms } = require("../state").default
+const { rooms, addMessageToRoom } = require("../state")
 const { updateParticipants } = require("../utils")
 
 function getRoomHistory(roomName) {
     return rooms[roomName]?.history || []
-}
-
-function addMessageToRoom(roomName, message) {
-    if (rooms[roomName]) {
-        rooms[roomName].history.push(message)
-    }
 }
 
 module.exports = (io, socket) => {
@@ -29,7 +23,7 @@ module.exports = (io, socket) => {
             isPrivate: isPrivate,
             password: roomPassword,
             participantCount: 0,
-            user: userName,
+            owner: userName,
             history: [],
         }
         socket.emit("room-created", roomName)
@@ -54,6 +48,7 @@ module.exports = (io, socket) => {
         socket.join(roomName)
         socket.userName = userName
         socket.room = roomName
+        console.log(socket.room)
 
         console.log(`${userName} entrou na sala: ${roomName}`)
 

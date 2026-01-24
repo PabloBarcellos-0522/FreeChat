@@ -1,7 +1,8 @@
-const { rooms, users } = require("./state").default
+const { rooms, users } = require("./state")
 const chatHandler = require("./events/chatHandler")
 const roomHandler = require("./events/roomHandler")
 const userHandler = require("./events/userHandler")
+const videoHandler = require("./events/videoHandler")
 
 const initializeSocketHandler = (io) => {
     io.on("connection", (socket) => {
@@ -13,6 +14,7 @@ const initializeSocketHandler = (io) => {
         chatHandler(io, socket)
         roomHandler(io, socket)
         userHandler(io, socket)
+        videoHandler(io, socket)
     })
 }
 
