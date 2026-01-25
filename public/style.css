@@ -199,12 +199,12 @@ h2 {
     color: white;
     margin-left: auto;
     text-align: right;
-    border-radius: 20px 20px 3px 20px;
+    border-radius: 25px 25px 0px 25px;
 }
 
 .message.received {
     background-color: #e9e9eb;
-    border-radius: 20px 20px 20px 3px;
+    border-radius: 25px 25px 25px 0px;
 }
 
 .message .sender {
@@ -453,8 +453,8 @@ h2 {
 
 .lenis.lenis-smooth iframe {
     pointer-events: all;
+    border-radius: 10px;
 }
 .video-wrapper.unauthorized iframe {
     pointer-events: none;
 }
-

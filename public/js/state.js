@@ -29,6 +29,7 @@ export const state = {
     isRemoteStateChange: false, // Flag para evitar loops de eventos de vídeo (play/pause)
     // isRemoteApiChange: false, // Flag para evitar loops de eventos de API (mute/unmute)
     lastMuteState: null, // Último estado de mute conhecido
+    intervals: {}, // Armazena intervalos relacionados aos vídeos
 }
 
 // Recupera o nome de usuário do localStorage na inicialização

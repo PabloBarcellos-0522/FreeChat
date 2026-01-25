@@ -179,6 +179,15 @@ export function enterLobby() {
     elements.messages.innerHTML = ""
     elements.participantsList.innerHTML = ""
     document.getElementById("participant-container").style.display = "none"
+
+    state.videoPlayers = {}
+    state.videoPlayerQueue = []
+
+    console.log(state.intervals)
+    for (const id in state.intervals) {
+        clearInterval(state.intervals[id])
+    }
+    console.log(state.intervals)
 }
 
 export function enterChatRoom(roomName) {
@@ -229,7 +238,7 @@ function onPlayerReady(event, uniqueInstanceId, videoID) {
 // }
 
 function startMuteCheck(player, uniqueInstanceId) {
-    setInterval(() => {
+    const id = setInterval(() => {
         const currentState = player.isMuted()
         if (currentState !== state.lastMuteState) {
             state.lastMuteState = currentState
@@ -246,6 +255,7 @@ function startMuteCheck(player, uniqueInstanceId) {
             })
         }
     }, 500) // Verifica a cada meio segundo
+    state.intervals[uniqueInstanceId] = id
 }
 
 function onPlayerStateChange(event, uniqueInstanceId) {
