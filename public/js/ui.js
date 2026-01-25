@@ -1,5 +1,6 @@
 // public/js/ui.js
 import { state } from "./state.js"
+import { socket } from "./socket.js"
 
 // --- Element Selectors ---
 export const elements = {
@@ -24,6 +25,7 @@ export const elements = {
     modalImage: document.getElementById("modal-image"),
     closeModalBtn: document.querySelector(".modal-close"),
     app: document.getElementById("app"),
+    addVideo: document.getElementById("add-video"),
 }
 
 const mouseColors = [
@@ -101,7 +103,11 @@ export function updateRoomsList(rooms) {
 
 export function updateParticipants(participants, socketId) {
     elements.participantsList.innerHTML = ""
+    state.roomOwnerName = null
     participants.forEach((p) => {
+        if (p.king) {
+            state.roomOwnerName = p.name
+        }
         const li = document.createElement("li")
         li.textContent = (p.king ? "👑 " : "👥 ") + p.name
         if (p.id === socketId) {
@@ -185,11 +191,174 @@ export function enterChatRoom(roomName) {
     document.getElementById("participant-container").style.display = "block"
 }
 
+function onPlayerReady(event, uniqueInstanceId, videoID) {
+    const player = event.target
+    console.log(`Player ${videoID} (Instance: ${uniqueInstanceId}) está pronto.`)
+    state.videoPlayers[uniqueInstanceId] = {
+        player: player,
+        isMuted: player.isMuted(),
+        videoID: videoID, // Armazena o videoID original
+    }
+
+    startMuteCheck(player, uniqueInstanceId)
+}
+
+// function onPlayerApiChange(event, uniqueInstanceId) {
+//     console.log(`/??????`)
+//     if (state.isRemoteApiChange) {
+//         state.isRemoteApiChange = false
+//         return
+//     }
+
+//     const player = event.target
+//     const playerState = state.videoPlayers[uniqueInstanceId]
+//     if (!playerState) return
+
+//     const isMutedNow = player.isMuted()
+//     if (isMutedNow !== playerState.isMuted) {
+//         console.log(
+//             `EMIT: video-control '${isMutedNow ? "mute" : "unmute"}' para ${playerState.videoID} (Instance: ${uniqueInstanceId})`,
+//         )
+//         socket.emit("video-control", {
+//             uniqueInstanceId: uniqueInstanceId, // Passa o ID da instância para o servidor
+//             videoID: playerState.videoID, // Passa o ID do vídeo para autorização
+//             action: isMutedNow ? "mute" : "unmute",
+//         })
+//         playerState.isMuted = isMutedNow
+//     }
+// }
+
+function startMuteCheck(player, uniqueInstanceId) {
+    setInterval(() => {
+        const currentState = player.isMuted()
+        if (currentState !== state.lastMuteState) {
+            state.lastMuteState = currentState
+            console.log(currentState ? "Vídeo Silenciado" : "Som Ativado")
+
+            // Aqui você pode disparar sua lógica customizada
+            document.dispatchEvent(new CustomEvent("muteChanged", { detail: currentState }))
+
+            const playerState = state.videoPlayers[uniqueInstanceId]
+            socket.emit("video-control", {
+                uniqueInstanceId: uniqueInstanceId, // Passa o ID da instância para o servidor
+                videoID: playerState.videoID, // Passa o ID do vídeo para autorização
+                action: player.isMuted() ? "mute" : "unmute",
+            })
+        }
+    }, 500) // Verifica a cada meio segundo
+}
+
+function onPlayerStateChange(event, uniqueInstanceId) {
+    if (state.isRemoteStateChange) {
+        state.isRemoteStateChange = false
+        return
+    }
+
+    const playerState = state.videoPlayers[uniqueInstanceId]
+    const player = playerState?.player
+    if (!player) return
+
+    switch (event.data) {
+        case YT.PlayerState.PLAYING:
+            console.log(
+                `EMIT: video-control 'play' para ${playerState.videoID} (Instance: ${uniqueInstanceId})`,
+            )
+            socket.emit("video-control", {
+                uniqueInstanceId: uniqueInstanceId, // Passa o ID da instância para o servidor
+                videoID: playerState.videoID, // Passa o ID do vídeo para autorização
+                action: "play",
+                time: player.getCurrentTime(),
+            })
+            break
+        case YT.PlayerState.PAUSED:
+            console.log(
+                `EMIT: video-control 'pause' para ${playerState.videoID} (Instance: ${uniqueInstanceId})`,
+            )
+            socket.emit("video-control", {
+                uniqueInstanceId: uniqueInstanceId, // Passa o ID da instância para o servidor
+                videoID: playerState.videoID, // Passa o ID do vídeo para autorização
+                action: "pause",
+                time: player.getCurrentTime(),
+            })
+            break
+        case YT.PlayerState.ENDED:
+            console.log(`Player ${playerState.videoID} (Instance: ${uniqueInstanceId}) terminou`)
+            break
+    }
+}
+
+export function initializeQueuedPlayers() {
+    if (!window.YT || !window.YT.Player) {
+        console.log("A API do YouTube ainda não está pronta. Tentando novamente em 100ms.")
+        setTimeout(initializeQueuedPlayers, 100)
+        return
+    }
+
+    if (state.videoPlayerQueue.length === 0) {
+        return
+    }
+
+    console.log(`Inicializando ${state.videoPlayerQueue.length} player(s) na fila.`)
+    state.videoPlayerQueue.forEach(({ uniqueInstanceId, videoID }) => {
+        // Pega uniqueInstanceId
+        if (!document.getElementById(uniqueInstanceId)) {
+            console.warn(
+                `Container ${uniqueInstanceId} não encontrado no DOM. O vídeo pode não ter sido renderizado ainda.`,
+            )
+            return
+        }
+        // Evita reinicializar um player que já existe (chave é uniqueInstanceId)
+        if (state.videoPlayers[uniqueInstanceId]) {
+            console.log(`Player para ${uniqueInstanceId} já inicializado.`)
+            return
+        }
+
+        // Adiciona uma entrada temporária para evitar recriação em chamadas rápidas
+        // O onReady irá preencher o objeto completo
+        state.videoPlayers[uniqueInstanceId] = {}
+
+        console.log(`Criando player para videoID: ${videoID} no container: ${uniqueInstanceId}`)
+        new YT.Player(uniqueInstanceId, {
+            height: "225",
+            width: "400",
+            videoId: videoID,
+            playerVars: { playsinline: 1, enablejsapi: 1 },
+            events: {
+                onReady: (event) => onPlayerReady(event, uniqueInstanceId, videoID), // Passa uniqueInstanceId e videoID
+                onStateChange: (event) => onPlayerStateChange(event, uniqueInstanceId),
+                // onApiChange: (event) => onPlayerApiChange(event, uniqueInstanceId),
+            },
+        })
+    })
+
+    // Limpa a fila após processar
+    state.videoPlayerQueue = []
+}
+
 function createMessageContent(data) {
-    const { message, type = "text" } = data
+    const { message, type = "text", name } = data
     const imageRegex = /\.(jpeg|jpg|gif|png|webp)$/i
     if (type === "image") {
         return `<img src="${message}" alt="Imagem enviada" class="chat-image">`
+    } else if (type === "video") {
+        // const uniqueInstanceId = `${data.videoID}-${Date.now()}-${Math.floor(Math.random() * 1000)}`; // uniqueInstanceId now comes from the server
+        const uniqueInstanceId = data.uniqueInstanceId
+        const isAuthorized = state.userName === state.roomOwnerName || state.userName === name
+        const unauthorizedClass = !isAuthorized ? "unauthorized" : ""
+
+        // Adiciona o vídeo à fila para ser inicializado quando a API estiver pronta
+        state.videoPlayerQueue.push({ uniqueInstanceId, videoID: data.videoID }) // Armazena uniqueInstanceId
+
+        // Gatilho para processar a fila. O setTimeout garante que o elemento
+        // estará no DOM antes da inicialização.
+        setTimeout(initializeQueuedPlayers, 0)
+
+        // Retornamos o container com data-lenis-prevent para não bugar o scroll suave
+        return `
+            <div class="video-wrapper ${unauthorizedClass}" data-lenis-prevent data-uniqueinstanceid="${uniqueInstanceId}">
+                <div id="${uniqueInstanceId}"></div>
+            </div>
+        `
     }
     const urlRegex = /(https?:\/\/[^\s]+)/g
     return message.replace(urlRegex, (url) =>

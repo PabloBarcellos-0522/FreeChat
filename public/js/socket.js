@@ -49,6 +49,8 @@ export function registerSocketEvents() {
 
     socket.on("room-history", (data) => {
         ui.displayHistory(data.messages)
+        // Após exibir o histórico, inicializa quaisquer players de vídeo que foram enfileirados.
+        ui.initializeQueuedPlayers()
     })
 
     socket.on("update-rooms-list", ui.updateRoomsList)
@@ -78,6 +80,8 @@ export function registerSocketEvents() {
             delete state.typingUsers[data.name]
             ui.updateTypingIndicator()
         }
+
+        console.log("Nova mensagem recebida:", data)
         ui.displayMessage(data)
     })
 
@@ -91,5 +95,39 @@ export function registerSocketEvents() {
         console.log(`${userName} parou de digitar...`)
         delete state.typingUsers[userName]
         ui.updateTypingIndicator()
+    })
+
+    // --- Video Sync Events ---
+
+    socket.on("video-sync", (data) => {
+        console.log("Evento 'video-sync' recebido", data)
+        const player = state.videoPlayers[data.uniqueInstanceId]?.player
+        if (!player) {
+            console.warn(`Player para uniqueInstanceId ${data.uniqueInstanceId} não encontrado.`)
+            return
+        }
+
+        if (data.action === "mute") {
+            // state.isRemoteApiChange = true
+            player.mute()
+            return
+        }
+        if (data.action === "unmute") {
+            // state.isRemoteApiChange = true
+            player.unMute()
+            return
+        }
+
+        // Ações que precisam de seek (play/pause)
+        state.isRemoteStateChange = true
+        if (data.time) {
+            player.seekTo(data.time, true)
+        }
+
+        if (data.action === "play") {
+            player.playVideo()
+        } else if (data.action === "pause") {
+            player.pauseVideo()
+        }
     })
 }

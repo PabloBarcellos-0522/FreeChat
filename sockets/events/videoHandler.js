@@ -7,6 +7,7 @@ module.exports = (io, socket) => {
         const payload = {
             name: data.userName,
             videoID: data.videoID,
+            uniqueInstanceId: `${data.videoID}-${Date.now()}-${Math.floor(Math.random() * 1000)}`, // Server generates unique ID
             time: new Date().toISOString(),
             type: "video",
         }
@@ -14,63 +15,62 @@ module.exports = (io, socket) => {
         io.to(socket.room).emit("new-message", payload)
     }
 
-    const autorizeVideoControl = (data) => {
-        console.log("Autorizando controle de vídeo com dados:", data)
-        const { message } = data
-        let videoPayload = null
-        rooms[socket.room].history.forEach((msg) => {
-            if (msg.type === "video" && msg.name === message.name) {
-                videoPayload = msg
-            }
-        })
+    const authorizeVideoControl = (videoID) => {
+        const room = rooms[socket.room]
+        if (!room) return false
 
-        // Participantes que não são o dono da sala ou do vídeo não podem controlar o vídeo
-        if (socket.userName != rooms[socket.room]?.owner && videoPayload.name != socket.userName) {
-            socket.emit("seek-error", {
-                message: "Apenas o dono da sala ou vídeo pode controlá-lo.",
-            })
-            return false
+        // O dono da sala sempre pode controlar
+        if (socket.id === room.owner) {
+            return true
         }
-        return true
+
+        // Encontra a mensagem original do vídeo no histórico
+        const videoMessage = room.history.find((msg) => msg.type === "video" && msg.videoID === videoID)
+
+        // Se o vídeo existe, verifica se o usuário que o adicionou é o mesmo que está tentando controlar
+        if (videoMessage && videoMessage.name === socket.userName) {
+            return true
+        }
+
+        console.log(
+            `Autorização negada para ${socket.userName} controlar o vídeo ${videoID}. Dono da sala: ${
+                io.sockets.sockets.get(room.owner)?.userName
+            }, Dono do vídeo: ${videoMessage?.name}`,
+        )
+        return false
     }
 
     const requestVideoInit = (data) => {
         console.log("Requisição de inicialização de vídeo recebida:", data)
-        participantsList(io, socket.room).forEach((p) => {
-            console.log("Verificando participante para inicialização de vídeo:", p)
-            if (socket.userName == p.name) {
-                if (p.king) {
-                    videoInit(data)
-                    return
+        const participant = participantsList(io, socket.room).find(
+            (p) => p.name === socket.userName,
+        )
+
+        if (participant) {
+            if (participant.king) {
+                videoInit(data)
+            } else {
+                // Envia o pedido de autorização para o dono da sala (king)
+                const ownerSocketId = rooms[socket.room]?.owner
+                if (ownerSocketId) {
+                    socket.to(ownerSocketId).emit("request-video-init", {
+                        userName: socket.userName,
+                        videoID: data.videoID,
+                    })
                 }
-
-                socket
-                    .to(rooms[socket.room].owner)
-                    .emit("request-video-init", { userName: socket.userName })
             }
-        })
-    }
-
-    const play = (data) => {
-        if (autorizeVideoControl(data)) {
-            socket.broadcast.to(socket.room).emit("play-video", { videoTime })
         }
     }
 
-    const pause = (data) => {
-        if (autorizeVideoControl(data)) {
-            socket.broadcast.to(socket.room).emit("pause-video", { videoTime })
-        }
-    }
-
-    const seekTo = (data) => {
-        if (autorizeVideoControl(data)) {
-            socket.broadcast.to(socket.room).emit("seek-video", { videoTime: data.videoTime })
+    const onVideoControl = (data) => {
+        if (authorizeVideoControl(data.videoID)) {
+            console.log("Evento 'video-control' autorizado, transmitindo 'video-sync':", data)
+            socket.broadcast.to(socket.room).emit("video-sync", data)
+        } else {
+            console.log(`Evento 'video-control' não autorizado para videoID: ${data.videoID}`)
         }
     }
 
     socket.on("request-video-init", requestVideoInit)
-    socket.on("play", play)
-    socket.on("pause", pause)
-    socket.on("seekTo", seekTo)
+    socket.on("video-control", onVideoControl)
 }

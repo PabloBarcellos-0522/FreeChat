@@ -1,5 +1,5 @@
 // public/js/main.js
-import { elements } from "./ui.js"
+import { elements, initializeQueuedPlayers } from "./ui.js"
 import { registerSocketEvents } from "./socket.js"
 import { registerDomEvents } from "./listeners.js"
 
@@ -17,6 +17,18 @@ document.addEventListener("DOMContentLoaded", () => {
         requestAnimationFrame(raf)
     }
     requestAnimationFrame(raf)
+
+    if (!window.YT) {
+        var tag = document.createElement("script")
+        tag.src = "https://www.youtube.com/iframe_api"
+        var firstScriptTag = document.getElementsByTagName("script")[0]
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag)
+    }
+
+    window.onYouTubeIframeAPIReady = function () {
+        console.log("API do YouTube carregada e pronta.")
+        initializeQueuedPlayers()
+    }
 
     // Register all event handlers
     registerSocketEvents()

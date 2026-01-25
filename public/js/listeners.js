@@ -132,15 +132,30 @@ export function registerDomEvents() {
         enterLobby()
     })
 
-    // --- Image Modal Listeners ---
+    // --- Modal and Video Fullscreen Listeners ---
     const zoomStep = 0.1,
         maxZoom = 3,
         minZoom = 0.5
 
     elements.messages.addEventListener("click", (e) => {
+        // Image modal
         if (e.target.tagName === "IMG" && e.target.classList.contains("chat-image")) {
             elements.imageModal.style.display = "flex"
             elements.modalImage.src = e.target.src
+            return
+        }
+
+        // Unauthorized video fullscreen
+        const unauthorizedVideo = e.target.closest(".video-wrapper.unauthorized")
+        if (unauthorizedVideo) {
+            const uniqueInstanceId = unauthorizedVideo.dataset.uniqueinstanceid
+            const player = state.videoPlayers[uniqueInstanceId]?.player
+            if (player && typeof player.getIframe === "function") {
+                const iframe = player.getIframe()
+                if (iframe && typeof iframe.requestFullscreen === "function") {
+                    iframe.requestFullscreen()
+                }
+            }
         }
     })
 
@@ -163,5 +178,14 @@ export function registerDomEvents() {
     elements.modalImage.addEventListener("click", (e) => {
         e.stopPropagation()
         resetZoom()
+    })
+
+    elements.addVideo.addEventListener("click", () => {
+        // const videoID = prompt("Por favor, insira o ID do vídeo do YouTube:")
+        console.log("Botão de adicionar vídeo clicado")
+        const videoID = "bHYe6U0c4GA"
+        if (videoID) {
+            socket.emit("request-video-init", { userName: state.userName, videoID })
+        }
     })
 }
