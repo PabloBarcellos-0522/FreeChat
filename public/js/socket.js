@@ -121,7 +121,12 @@ export function registerSocketEvents() {
         // Ações que precisam de seek (play/pause)
         state.isRemoteStateChange = true
         if (data.time) {
-            player.seekTo(data.time, true)
+            const now = Date.now()
+            const latency = data.timestamp ? (now - data.timestamp) / 1000 : 0
+            console.log(`Ajustando seek com latência estimada de ${latency} segundos.`)
+            const seekTime = data.time + latency
+
+            player.seekTo(seekTime, true)
         }
 
         if (data.action === "play") {

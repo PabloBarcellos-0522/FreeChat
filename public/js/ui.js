@@ -278,6 +278,7 @@ function onPlayerStateChange(event, uniqueInstanceId) {
                 videoID: playerState.videoID, // Passa o ID do vídeo para autorização
                 action: "play",
                 time: player.getCurrentTime(),
+                timestamp: Date.now(),
             })
             break
         case YT.PlayerState.PAUSED:
@@ -289,6 +290,7 @@ function onPlayerStateChange(event, uniqueInstanceId) {
                 videoID: playerState.videoID, // Passa o ID do vídeo para autorização
                 action: "pause",
                 time: player.getCurrentTime(),
+                timestamp: Date.now(),
             })
             break
         case YT.PlayerState.ENDED:
