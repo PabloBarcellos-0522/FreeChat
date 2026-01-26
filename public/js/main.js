@@ -1,6 +1,6 @@
 // public/js/main.js
 import { elements, initializeQueuedPlayers } from "./ui.js"
-import { registerSocketEvents } from "./socket.js"
+import { registerSocketEvents, socket } from "./socket.js"
 import { registerDomEvents } from "./listeners.js"
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -28,6 +28,12 @@ document.addEventListener("DOMContentLoaded", () => {
     window.onYouTubeIframeAPIReady = function () {
         console.log("API do YouTube carregada e pronta.")
         initializeQueuedPlayers()
+    }
+
+    const savedUserName = localStorage.getItem("userName")
+    console.log(savedUserName)
+    if (savedUserName) {
+        socket.emit("validade-username", { userName: savedUserName })
     }
 
     // Register all event handlers

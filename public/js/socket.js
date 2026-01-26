@@ -23,8 +23,9 @@ export function registerSocketEvents() {
 
     socket.on("username-validation", (data) => {
         if (data.isFree) {
-            console.log("Nome de usuário disponível:", state.userName)
-            state.setUserName = state.userName
+            console.log("Nome de usuário disponível:", data.userName)
+            state.setUserName = data.userName
+            ui.elements.usernameInput.value = data.userName
         } else {
             alert("Nome de usuário já está em uso. Por favor, escolha outro.")
             state.userName = ""

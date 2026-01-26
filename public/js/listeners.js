@@ -7,15 +7,16 @@ function validateUsername() {
     let newUserName = elements.usernameInput.value.trim()
     if (newUserName.length < 3 || newUserName.length > 15) {
         alert("O nome de usuário deve ter entre 3 e 15 caracteres.")
-        elements.usernameInput.value = state.setUserName
+        elements.usernameInput.value = ""
+        state.setUserName = ""
         return false
-    }
-    if (!/^[a-zA-Z0-9_]+$/.test(newUserName)) {
+    } else if (!/^[a-zA-Z0-9_]+$/.test(newUserName)) {
         alert("O nome de usuário só pode conter letras, números e underscores.")
-        elements.usernameInput.value = state.setUserName
+        elements.usernameInput.value = ""
+        state.setUserName = ""
         return false
     }
-    state.userName = newUserName
+    state.setUserName = newUserName
     return true
 }
 

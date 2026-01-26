@@ -21,7 +21,7 @@ module.exports = (io, socket) => {
             users[socket.id].name = userName
             socket.userName = userName // Attach username to the socket for easy access
         }
-        socket.emit("username-validation", { isFree })
+        socket.emit("username-validation", { isFree, userName: data.userName.trim() })
     }
 
     const onMouseMove = (data) => {

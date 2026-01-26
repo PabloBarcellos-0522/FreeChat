@@ -31,10 +31,3 @@ export const state = {
     lastMuteState: null, // Último estado de mute conhecido
     intervals: {}, // Armazena intervalos relacionados aos vídeos
 }
-
-// Recupera o nome de usuário do localStorage na inicialização
-const savedUserName = localStorage.getItem("userName")
-if (savedUserName) {
-    state.userName = savedUserName
-    document.getElementById("username").value = savedUserName
-}
