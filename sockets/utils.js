@@ -26,6 +26,17 @@ function participantsList(io, roomName) {
 
 function updateParticipants(io, roomName) {
     const participants = participantsList(io, roomName)
+    if (participants.length === 0) {
+        // Remove the room after 30 minutes of inactivity
+        setTimeout(() => {
+            const participantsFinal = participantsList(io, roomName)
+            if (participantsFinal.length === 0) {
+                delete rooms[roomName]
+                io.emit("update-rooms-list", Object.values(rooms))
+            }
+        }, 1800000)
+        return
+    }
     io.to(roomName).emit("update-participants", participants)
 }
 

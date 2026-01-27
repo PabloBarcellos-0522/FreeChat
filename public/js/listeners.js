@@ -176,10 +176,13 @@ export function registerDomEvents() {
         }
 
         const msgDiv = e.target.closest("div")
-        if (msgDiv && elements.messages.contains(msgDiv)) {
+        if (msgDiv && elements.messages.contains(msgDiv) && e.target.id != "messages") {
             const paragrafo = msgDiv.querySelector("p")
-            if (paragrafo) {
+            if (paragrafo && !paragrafo.classList.contains("visible")) {
                 paragrafo.classList.toggle("visible")
+                setTimeout(() => {
+                    paragrafo.classList.remove("visible")
+                }, 10000)
             }
         }
         // Unauthorized video fullscreen
