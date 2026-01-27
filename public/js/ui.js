@@ -67,6 +67,14 @@ export function displayMessage(data) {
 
     const contentHTML = createMessageContent(data)
     messageElement.innerHTML = `<span class="sender">${name}</span><span class="content">${contentHTML}</span>`
+    const hour = document.createElement("p")
+    const date = new Date(data.time)
+    const hora = date.getHours().toString().padStart(2, "0")
+    const minuto = date.getMinutes().toString().padStart(2, "0")
+    const horarioFormatado = `${hora}:${minuto}`
+    hour.innerHTML = horarioFormatado
+    hour.classList.add("hours-message")
+    messageElement.appendChild(hour)
 
     if (isSystem) {
         messageElement.classList.add("system-message")

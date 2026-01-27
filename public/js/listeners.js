@@ -167,6 +167,7 @@ export function registerDomEvents() {
         minZoom = 0.5
 
     elements.messages.addEventListener("click", (e) => {
+        e.preventDefault()
         // Image modal
         if (e.target.tagName === "IMG" && e.target.classList.contains("chat-image")) {
             elements.imageModal.style.display = "flex"
@@ -174,6 +175,13 @@ export function registerDomEvents() {
             return
         }
 
+        const msgDiv = e.target.closest("div")
+        if (msgDiv && elements.messages.contains(msgDiv)) {
+            const paragrafo = msgDiv.querySelector("p")
+            if (paragrafo) {
+                paragrafo.classList.toggle("visible")
+            }
+        }
         // Unauthorized video fullscreen
         const unauthorizedVideo = e.target.closest(".video-wrapper.unauthorized")
         if (unauthorizedVideo) {

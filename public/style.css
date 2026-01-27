@@ -19,6 +19,45 @@ body::-webkit-scrollbar {
     display: none;
 }
 
+/* Configurações para Chrome, Edge e Safari */
+::-webkit-scrollbar {
+    width: 6px; /* Largura do scroll vertical */
+    height: 6px; /* Altura do scroll horizontal */
+}
+
+::-webkit-scrollbar-track {
+    background: transparent; /* Cor da "pista" por onde o scroll corre */
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 10px;
+    border: 1px solid transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #464646; /* Cor quando passa o mouse */
+}
+
+/* Configuração para Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #c4c4c4 transparent; /* Cor da barra e da pista */
+}
+
+.hours-message {
+    font-size: 0.8rem;
+    margin: 0;
+    max-height: 0;
+    transition: all 0.5s ease-out;
+    opacity: 0;
+}
+
+.hours-message.visible {
+    max-height: 100px;
+    opacity: 1;
+}
+
 .container {
     background: white;
     padding: 2rem;
@@ -166,7 +205,7 @@ h2 {
 
 #messages {
     flex-grow: 1;
-    overflow-y: hidden;
+    overflow-y: auto;
     padding-right: 1rem;
     padding-left: 1rem;
 }
@@ -175,7 +214,6 @@ h2 {
     margin-bottom: 1rem;
     padding: 0.8rem;
     border-radius: 8px;
-    /* max-width: 80%; */
     width: fit-content;
 }
 
