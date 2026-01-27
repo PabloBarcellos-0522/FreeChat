@@ -89,6 +89,10 @@ export function registerDomEvents() {
     })
 
     elements.sendMediaBtn.addEventListener("click", () => {
+        elements.optionsDialog.showModal()
+    })
+
+    elements.selectMediaFileBtn.addEventListener("click", () => {
         elements.mediaInput.click()
     })
 
@@ -105,7 +109,31 @@ export function registerDomEvents() {
             })
         }
         reader.readAsDataURL(file)
-        elements.mediaInput.value = ""
+        elements.mediaInput.value = "" // Reset file input
+        elements.optionsDialog.close() // Close dialog
+    })
+
+    elements.sendLinkBtn.addEventListener("click", () => {
+        const link = elements.mediaLinkInput.value.trim()
+        if (link) {
+            const youtubeRegex =
+                /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i
+            const match = link.match(youtubeRegex)
+
+            if (match && match[1]) {
+                const videoID = match[1]
+                socket.emit("request-video-init", { userName: state.userName, videoID })
+            } else {
+                socket.emit("send-message", {
+                    roomName: state.currentRoom,
+                    message: link,
+                    type: "link", // Let server handle if it's image or video
+                    userName: state.userName,
+                })
+            }
+            elements.mediaLinkInput.value = "" // Clear input
+            elements.optionsDialog.close() // Close dialog
+        }
     })
 
     elements.sendMessageBtn.addEventListener("click", sendMessage)
@@ -181,17 +209,46 @@ export function registerDomEvents() {
         resetZoom()
     })
 
-    elements.addVideo.addEventListener("click", () => {
-        // const videoID = prompt("Por favor, insira o ID do vídeo do YouTube:")
-        console.log("Botão de adicionar vídeo clicado")
-        const videoID = "bHYe6U0c4GA"
-        if (videoID) {
-            socket.emit("request-video-init", { userName: state.userName, videoID })
-        }
-    })
-
     elements.acceptMediaBtn.addEventListener("click", () => {
         elements.requestMediaDialog.closest("dialog").close()
         socket.emit("request-video-init", state.mediaDataRequested)
+    })
+
+    elements.dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault()
+        elements.dropZone.classList.add("dragover")
+    })
+
+    elements.dropZone.addEventListener("dragleave", (e) => {
+        e.preventDefault()
+        elements.dropZone.classList.remove("dragover")
+    })
+
+    elements.dropZone.addEventListener("drop", (e) => {
+        e.preventDefault()
+        elements.dropZone.classList.remove("dragover")
+        const file = e.dataTransfer.files[0]
+        if (!file) return
+        const reader = new FileReader()
+        console.log(file)
+
+        reader.onload = () => {
+            socket.emit("send-message", {
+                roomName: state.currentRoom,
+                message: reader.result,
+                type: "image",
+                userName: state.userName,
+            })
+        }
+        reader.readAsDataURL(file)
+        elements.mediaInput.value = "" // Reset file input
+        elements.optionsDialog.close() // Close dialog
+    })
+
+    // Fechar dialogs ao clicar fora
+    document.addEventListener("click", (event) => {
+        if (event.target.tagName === "DIALOG") {
+            event.target.close()
+        }
     })
 }

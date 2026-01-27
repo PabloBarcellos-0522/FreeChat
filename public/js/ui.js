@@ -25,10 +25,14 @@ export const elements = {
     modalImage: document.getElementById("modal-image"),
     closeModalBtn: document.querySelector(".modal-close"),
     app: document.getElementById("app"),
-    addVideo: document.getElementById("add-video"),
     requestMediaDialog: document.getElementById("request-media-dialog"),
     requesterUsername: document.getElementById("requester-username"),
     acceptMediaBtn: document.getElementById("accept-resquest-media"),
+    optionsDialog: document.getElementById("options-dialog"),
+    selectMediaFileBtn: document.getElementById("select-media-file-btn"),
+    mediaLinkInput: document.getElementById("media-link-input"),
+    sendLinkBtn: document.getElementById("send-link-btn"),
+    dropZone: document.querySelector(".drop-zone"),
 }
 
 const mouseColors = [

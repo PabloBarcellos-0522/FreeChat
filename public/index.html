@@ -64,6 +64,50 @@
                     </div>
                 </div>
             </dialog>
+            <dialog id="options-dialog" class="container">
+                <div class="dialog-header">
+                    <h2>Anexar Mídia</h2>
+                    <button class="close-btn" onclick="this.closest('dialog').close()">
+                        &times;
+                    </button>
+                </div>
+                <div class="dialog-body">
+                    <div class="media-option drop-zone">
+                        <button id="select-media-file-btn">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" x2="12" y1="3" y2="15" />
+                            </svg>
+                            <span>Selecionar do Computador</span>
+                        </button>
+                        <p>ou arraste e solte um arquivo aqui</p>
+                    </div>
+                    <div class="divider">ou</div>
+                    <div class="media-option link-option">
+                        <label for="media-link-input">Link de Imagem ou Vídeo</label>
+                        <div class="input-with-button">
+                            <input
+                                id="media-link-input"
+                                type="text"
+                                placeholder="Cole o link aqui..."
+                            />
+                            <button id="send-link-btn">Enviar</button>
+                        </div>
+                        <p>Cole um link de imagem ou de um vídeo do YouTube.</p>
+                    </div>
+                </div>
+            </dialog>
         </div>
         <script src="js/main.js" type="module"></script>
 
@@ -71,7 +115,5 @@
             <span class="modal-close">&times;</span>
             <img class="modal-content" id="modal-image" />
         </div>
-
-        <button id="add-video" style="width: 50px"></button>
     </body>
 </html>
