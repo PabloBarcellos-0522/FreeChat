@@ -26,6 +26,9 @@ export const elements = {
     closeModalBtn: document.querySelector(".modal-close"),
     app: document.getElementById("app"),
     addVideo: document.getElementById("add-video"),
+    requestMediaDialog: document.getElementById("request-media-dialog"),
+    requesterUsername: document.getElementById("requester-username"),
+    acceptMediaBtn: document.getElementById("accept-resquest-media"),
 }
 
 const mouseColors = [

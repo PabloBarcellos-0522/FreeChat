@@ -30,4 +30,5 @@ export const state = {
     // isRemoteApiChange: false, // Flag para evitar loops de eventos de API (mute/unmute)
     lastMuteState: null, // Último estado de mute conhecido
     intervals: {}, // Armazena intervalos relacionados aos vídeos
+    mediaDataRequested: null,
 }

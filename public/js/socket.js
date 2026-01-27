@@ -100,6 +100,16 @@ export function registerSocketEvents() {
 
     // --- Video Sync Events ---
 
+    socket.on("request-video-init", (data) => {
+        console.log("resquest recebida: " + data)
+        ui.elements.requesterUsername.innerHTML = `
+        <strong>${data.userName}</strong> Está pedindo permissão para postar um vídeo na sala
+        `
+
+        state.mediaDataRequested = data
+        ui.elements.requestMediaDialog.showModal()
+    })
+
     socket.on("video-sync", (data) => {
         console.log("Evento 'video-sync' recebido", data)
         const player = state.videoPlayers[data.uniqueInstanceId]?.player

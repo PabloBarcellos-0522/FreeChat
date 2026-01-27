@@ -25,7 +25,9 @@ module.exports = (io, socket) => {
         }
 
         // Encontra a mensagem original do vídeo no histórico
-        const videoMessage = room.history.find((msg) => msg.type === "video" && msg.videoID === videoID)
+        const videoMessage = room.history.find(
+            (msg) => msg.type === "video" && msg.videoID === videoID,
+        )
 
         // Se o vídeo existe, verifica se o usuário que o adicionou é o mesmo que está tentando controlar
         if (videoMessage && videoMessage.name === socket.userName) {
@@ -51,9 +53,11 @@ module.exports = (io, socket) => {
                 videoInit(data)
             } else {
                 // Envia o pedido de autorização para o dono da sala (king)
-                const ownerSocketId = rooms[socket.room]?.owner
-                if (ownerSocketId) {
-                    socket.to(ownerSocketId).emit("request-video-init", {
+                const name = rooms[socket.room]?.owner
+                const socketId = Object.keys(users).find((key) => users[key].name === name)
+
+                if (socketId) {
+                    socket.to(socketId).emit("request-video-init", {
                         userName: socket.userName,
                         videoID: data.videoID,
                     })

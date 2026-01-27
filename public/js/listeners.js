@@ -189,4 +189,9 @@ export function registerDomEvents() {
             socket.emit("request-video-init", { userName: state.userName, videoID })
         }
     })
+
+    elements.acceptMediaBtn.addEventListener("click", () => {
+        elements.requestMediaDialog.closest("dialog").close()
+        socket.emit("request-video-init", state.mediaDataRequested)
+    })
 }

@@ -54,6 +54,16 @@
                     <ul id="participants-list"></ul>
                 </div>
             </div>
+
+            <dialog id="request-media-dialog" class="container">
+                <div>
+                    <p id="requester-username"></p>
+                    <div style="display: flex; gap: 0.7rem">
+                        <button id="accept-resquest-media">Aceitar</button>
+                        <button onclick="this.closest('dialog').close()">Recusar</button>
+                    </div>
+                </div>
+            </dialog>
         </div>
         <script src="js/main.js" type="module"></script>
 
