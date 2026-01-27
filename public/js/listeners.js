@@ -222,6 +222,7 @@ export function registerDomEvents() {
 
     elements.acceptMediaBtn.addEventListener("click", () => {
         elements.requestMediaDialog.closest("dialog").close()
+        console.log(state.mediaDataRequested)
         socket.emit("request-video-init", state.mediaDataRequested)
     })
 

@@ -130,7 +130,16 @@ export function registerSocketEvents() {
         }
 
         // Ações que precisam de seek (play/pause)
-        state.isRemoteStateChange = true
+        // Set flag and timer to prevent re-emitting event
+        if (state.remoteStateChangeTimer) {
+            clearTimeout(state.remoteStateChangeTimer);
+        }
+        state.isRemoteStateChange = true;
+        state.remoteStateChangeTimer = setTimeout(() => {
+            state.isRemoteStateChange = false;
+            state.remoteStateChangeTimer = null;
+        }, 300); // Adjust delay as needed, 300ms is a reasonable start
+
         if (data.time) {
             const now = Date.now()
             const latency = data.timestamp ? (now - data.timestamp) / 1000 : 0

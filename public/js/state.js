@@ -27,6 +27,8 @@ export const state = {
     videoPlayers: {}, // Armazena instâncias dos players do YouTube
     videoPlayerQueue: [], // Fila para inicializar players após a API do YouTube carregar
     isRemoteStateChange: false, // Flag para evitar loops de eventos de vídeo (play/pause)
+    remoteStateChangeTimer: null, // Timer para gerenciar o reset do isRemoteStateChange
+
     // isRemoteApiChange: false, // Flag para evitar loops de eventos de API (mute/unmute)
     lastMuteState: null, // Último estado de mute conhecido
     intervals: {}, // Armazena intervalos relacionados aos vídeos

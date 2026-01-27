@@ -20,7 +20,11 @@ module.exports = (io, socket) => {
         if (!room) return false
 
         // O dono da sala sempre pode controlar
-        if (socket.id === room.owner) {
+        console.log(room.owner, socket.id, socket.userName)
+        if (socket.userName === room.owner) {
+            console.log(
+                `Autorização concedida para ${socket.userName} controlar o vídeo ${videoID}. Dono da sala: ${room.owner}`,
+            )
             return true
         }
 

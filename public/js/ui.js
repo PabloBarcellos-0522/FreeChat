@@ -259,9 +259,6 @@ function startMuteCheck(player, uniqueInstanceId) {
             state.lastMuteState = currentState
             console.log(currentState ? "Vídeo Silenciado" : "Som Ativado")
 
-            // Aqui você pode disparar sua lógica customizada
-            document.dispatchEvent(new CustomEvent("muteChanged", { detail: currentState }))
-
             const playerState = state.videoPlayers[uniqueInstanceId]
             socket.emit("video-control", {
                 uniqueInstanceId: uniqueInstanceId, // Passa o ID da instância para o servidor
@@ -275,7 +272,6 @@ function startMuteCheck(player, uniqueInstanceId) {
 
 function onPlayerStateChange(event, uniqueInstanceId) {
     if (state.isRemoteStateChange) {
-        state.isRemoteStateChange = false
         return
     }
 
