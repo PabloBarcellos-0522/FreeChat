@@ -3,6 +3,7 @@
 
 let rooms = {}
 let users = {}
+const roomTimers = {}
 
 function addMessageToRoom(roomName, message) {
     if (rooms[roomName]) {
@@ -13,5 +14,6 @@ function addMessageToRoom(roomName, message) {
 module.exports = {
     rooms,
     users,
+    roomTimers,
     addMessageToRoom,
 }

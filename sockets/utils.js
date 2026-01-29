@@ -1,5 +1,5 @@
 // sockets/utils.js
-const { rooms } = require("./state")
+const { rooms, roomTimers } = require("./state")
 
 function participantsList(io, roomName) {
     console.log("Obtendo lista de participantes para a sala:", roomName)
@@ -26,16 +26,25 @@ function participantsList(io, roomName) {
 
 function updateParticipants(io, roomName) {
     const participants = participantsList(io, roomName)
+    const room = rooms[roomName]
+    if (!room) return
+
     if (participants.length === 0) {
         // Remove the room after 30 minutes of inactivity
-        setTimeout(() => {
-            const participantsFinal = participantsList(io, roomName)
-            if (participantsFinal.length === 0) {
-                delete rooms[roomName]
-                io.emit("update-rooms-list", Object.values(rooms))
-            }
-        }, 1800000)
+        if (!roomTimers[roomName]) {
+            roomTimers[roomName] = setTimeout(() => {
+                if (rooms[roomName] && participantsList(io, roomName).length === 0) {
+                    delete rooms[roomName]
+                    delete roomTimers[roomName]
+                    io.emit("update-rooms-list", Object.values(rooms))
+                }
+            }, 1800000)
+        }
         return
+    } // We need to clear the timers to avoid "race condition" errors.
+    else if (roomTimers[roomName]) {
+        clearTimeout(roomTimers[roomName])
+        delete roomTimers[roomName]
     }
     io.to(roomName).emit("update-participants", participants)
 }
